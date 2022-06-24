@@ -54,7 +54,7 @@ contract BullnBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keepe
         interval = updateInterval;
         lastTimeStamp = block.timestamp;
 
-        // Pricefeed contract : https://rinkeby.etherscan.io/address/0xECe365B379E1dD183B20fc5f022230C044d51404
+        // Pricefeed contract for BTC-USD @Rinkeby : https://rinkeby.etherscan.io/address/0xECe365B379E1dD183B20fc5f022230C044d51404
         priceFeed = AggregatorV3Interface(_priceFeed);
         currentPrice = getLatestPrice();
         COORDINATOR = VRFCoordinatorV2Interface(_vrfCoordinator);  
@@ -76,34 +76,19 @@ contract BullnBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keepe
     function setPriceFeed(address newFeed) public onlyOwner {
         priceFeed = AggregatorV3Interface(newFeed);
     }
-    // Helpers
+    // Helper functions
     function compareStrings(string memory a, string memory b) internal pure returns (bool){
         return keccak256(abi.encodePacked(a)) == keccak256(abi.encodePacked(b));
     }
 
-    // function updateAllTokenUris(string memory trend) internal {
-    //     if (compareStrings("bear",trend)) {
-    //         for(uint i = 0; i < _tokenIdCounter.current(); i++){
-    //             _setTokenURI(i,bearUrisIpfs[0]);
-    //         }
-    //     }
-    //     else {
-    //         for(uint i = 0; i < _tokenIdCounter.current(); i++){
-    //             _setTokenURI(i,bullUrisIpfs[0]);
-    //         }
-    //     }
-
-    //     emit TokensUpdated(trend);
-        
-    // }
-
+    // Chainlink Keeper functions
     function checkUpkeep(bytes calldata /* checkData */) external view override returns (bool upkeepNeeded, bytes memory /* performData */) {
         upkeepNeeded = (block.timestamp - lastTimeStamp) > interval;
         // We don't use the checkData in this example. The checkData is defined when the Upkeep was registered.
     }
 
     function performUpkeep(bytes calldata /* performData */) external override {
-        //We highly recommend revalidating the upkeep in the performUpkeep function
+        // Revalidating the upkeep in the performUpkeep function
         if ((block.timestamp - lastTimeStamp) > interval ) {
             lastTimeStamp = block.timestamp;         
             int latestPrice =  getLatestPrice(); 
@@ -114,10 +99,8 @@ contract BullnBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keepe
             }
 
             if (latestPrice < currentPrice) {
-                // bear
                 currentMarketTrend = MarketTrend.BEAR;
             } else {
-                // bull
                 currentMarketTrend = MarketTrend.BULL;
             }
 
@@ -125,8 +108,8 @@ contract BullnBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keepe
             // that will then be used to to choose one of the URIs 
             // that gets applied to all minted tokens.
             requestRandomnessForNFTUris();
-            // update currentPrice
             currentPrice = latestPrice;
+
         } else {
             // Nothing.
             return;
@@ -148,8 +131,7 @@ contract BullnBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keepe
         console.log("Request ID: ", s_requestId);
     }
 
-    // This is the callback that the VRF coordinator sends the 
-    // random values to.
+    // Callback that the VRF coordinator sends the random values to.
     function fulfillRandomWords(
         uint256, /* requestId */
         uint256[] memory randomWords
@@ -173,7 +155,6 @@ contract BullnBear is ERC721, ERC721Enumerable, ERC721URIStorage, Ownable, Keepe
     function setSubscriptionId(uint64 _id) public onlyOwner {
         s_subscriptionId = _id;
     }
-
 
     function setCallbackGasLimit(uint32 maxGas) public onlyOwner {
         callbackGasLimit = maxGas;

@@ -1,3 +1,5 @@
+//This contract is used to act as a test Price Feed generator.
+
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.6.4;
 
